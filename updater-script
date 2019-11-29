@@ -5,19 +5,19 @@ package_extract_dir("install", "/tmp/install");
 set_metadata_recursive("/tmp/install", "uid", 0, "gid", 0, "dmode", 0755, "fmode", 0644);
 set_metadata_recursive("/tmp/install/bin", "uid", 0, "gid", 0, "dmode", 0755, "fmode", 0755);
 mount("ext4", "EMMC", "/dev/block/platform/omap/omap_hsmmc.1/by-name/FACTORYFS", "/system", "");
-set_perm_recursive(1000, 1000, 7777, 7777, "/system");
-set_perm_recursive(0, 0, 7777, 7777, "/system");
+set_perm_recursive(1000, 1000, 0777, 0777, "/system");
+set_perm_recursive(0, 0, 0777, 0777, "/system");
 run_program("/tmp/install/bin/backuptool.sh", "backup");
 unmount("/system");
 if is_mounted("/data") then
-set_perm_recursive(1000, 1000, 7777, 7777, "/data");
-set_perm_recursive(0, 0, 7777, 7777, "/data");
+set_perm_recursive(1000, 1000, 0777, 0777, "/data");
+set_perm_recursive(0, 0, 0777, 0777, "/data");
 package_extract_file("META-INF/org/lineageos/releasekey", "/tmp/releasekey");
 run_program("/tmp/install/bin/otasigcheck.sh") != "31744" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
 else
 mount("ext4", "EMMC", "/dev/block/platform/omap/omap_hsmmc.1/by-name/DATAFS", "/data", "");
-set_perm_recursive(1000, 1000, 7777, 7777, "/data");
-set_perm_recursive(0, 0, 7777, 7777, "/data");
+set_perm_recursive(1000, 1000, 0777, 0777, "/data");
+set_perm_recursive(0, 0, 0777, 0777, "/data");
 package_extract_file("META-INF/org/lineageos/releasekey", "/tmp/releasekey");
 run_program("/tmp/install/bin/otasigcheck.sh") != "31744" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
 unmount("/data");
