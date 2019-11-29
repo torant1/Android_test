@@ -1,0 +1,44 @@
+assert(getprop("ro.product.device") == "espresso3g" || getprop("ro.build.product") == "espresso3g" || getprop("ro.product.device") == "espresso-common" || getprop("ro.build.product") == "espresso-common" || getprop("ro.product.device") == "p3100" || getprop("ro.build.product") == "p3100" || getprop("ro.product.device") == "GT-P3100" || getprop("ro.build.product") == "GT-P3100" || getprop("ro.product.device") == "espressorf" || getprop("ro.build.product") == "espressorf" || getprop("ro.product.device") == "espressorfxx" || getprop("ro.build.product") == "espressorfxx" || getprop("ro.product.device") == "p5100" || getprop("ro.build.product") == "p5100" || getprop("ro.product.device") == "GT-P5100" || getprop("ro.build.product") == "GT-P5100" || getprop("ro.product.device") == "espresso10rf" || getprop("ro.build.product") == "espresso10rf" || getprop("ro.product.device") == "espresso10rfxx" || getprop("ro.build.product") == "espresso10rfxx" || abort("This package is for device: espresso3g,espresso-common,p3100,GT-P3100,espressorf,espressorfxx,p5100,GT-P5100,espresso10rf,espresso10rfxx; this device is " + getprop("ro.product.device") + "."););
+ui_print("Target: samsung/espresso10rfxx/espresso10rf:4.2.2/JDQ39/P5100XXDNA1:user/release-keys");
+ifelse(is_mounted("/system"), unmount("/system"));
+package_extract_dir("install", "/tmp/install");
+set_metadata_recursive("/tmp/install", "uid", 0, "gid", 0, "dmode", 0755, "fmode", 0644);
+set_metadata_recursive("/tmp/install/bin", "uid", 0, "gid", 0, "dmode", 0755, "fmode", 0755);
+mount("ext4", "EMMC", "/dev/block/platform/omap/omap_hsmmc.1/by-name/FACTORYFS", "/system", "");
+set_perm_recursive(1000, 1000, 7777, 7777, "/system");
+set_perm_recursive(0, 0, 7777, 7777, "/system");
+run_program("/tmp/install/bin/backuptool.sh", "backup");
+unmount("/system");
+if is_mounted("/data") then
+set_perm_recursive(1000, 1000, 7777, 7777, "/data");
+set_perm_recursive(0, 0, 7777, 7777, "/data");
+package_extract_file("META-INF/org/lineageos/releasekey", "/tmp/releasekey");
+run_program("/tmp/install/bin/otasigcheck.sh") != "31744" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
+else
+mount("ext4", "EMMC", "/dev/block/platform/omap/omap_hsmmc.1/by-name/DATAFS", "/data", "");
+set_perm_recursive(1000, 1000, 7777, 7777, "/data");
+set_perm_recursive(0, 0, 7777, 7777, "/data");
+package_extract_file("META-INF/org/lineageos/releasekey", "/tmp/releasekey");
+run_program("/tmp/install/bin/otasigcheck.sh") != "31744" || abort("Can't install this package on top of incompatible data. Please try another package or run a factory reset");
+unmount("/data");
+endif;
+show_progress(0.750000, 0);
+ui_print("Patching system image unconditionally...");
+block_image_update("/dev/block/platform/omap/omap_hsmmc.1/by-name/FACTORYFS", package_extract_file("system.transfer.list"), "system.new.dat", "system.patch.dat");
+ui_print("Verifying the updated system image...");
+if range_sha1("/dev/block/platform/omap/omap_hsmmc.1/by-name/FACTORYFS", "32,0,32770,32833,32835,33347,65535,65536,65538,66050,83706,98304,98306,98369,98371,98883,131071,131072,131074,163840,163842,163905,163907,164419,196607,196608,196610,229376,229378,229441,229443,229955,262143") == "8bc3eac3b933d6b6c3bdceeae052d42e26ac9120" then
+if range_sha1("/dev/block/platform/omap/omap_hsmmc.1/by-name/FACTORYFS", "38,32770,32833,32835,33347,65535,65536,65538,66050,83706,84218,97792,98304,98306,98369,98371,98883,131071,131072,131074,131586,163328,163840,163842,163905,163907,164419,196607,196608,196610,197122,228864,229376,229378,229441,229443,229955,262143,262144") == "8b0629c630f530cde051aeb42ce561756738fbe7" then
+ui_print("Verified the updated system image.");
+else
+  abort("system partition has unexpected non-zero contents after OTA update");
+endif;
+else
+  abort("system partition has unexpected contents after OTA update");
+endif;
+show_progress(0.020000, 10);
+mount("ext4", "EMMC", "/dev/block/platform/omap/omap_hsmmc.1/by-name/FACTORYFS", "/system", "");
+run_program("/tmp/install/bin/backuptool.sh", "restore");
+unmount("/system");
+show_progress(0.050000, 5);
+package_extract_file("boot.img", "/dev/block/platform/omap/omap_hsmmc.1/by-name/KERNEL");
+show_progress(0.200000, 10);
